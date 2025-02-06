@@ -54,7 +54,7 @@ def send_window():
     text_area.configure(state='disabled')
 
     button_style = {'fg': 'white', 'bg': '#2980B9', 'font': ('Helvetica', 12, 'bold')}
-    Button(t, text="Send", command=lambda: send_func(dip.get(), dmsg.get(), dkey.get(), text_area, myip, interface), **button_style).place(x=130, y=360, width=80)
+    Button(t, text="Send", command=lambda: send_func(dip.get(), dmsg, dkey.get(), text_area, myip, interface), **button_style).place(x=130, y=360, width=80)
     Button(t, text="Exit", command=lambda: destroy(t), **button_style).place(x=220, y=360, width=80)
 
     t.mainloop()
