@@ -1,6 +1,9 @@
 # IPv6-Steganography
 This tool can send and receive messages which are encrypted using AES-256-CBC Encryption. It hides the encrypted data inside of extension headers of IPv6 packets. It is entirely built in python. It runs only on Windows for now, linux support will be added later.
 
+# UPDATE for running:
+Just Run "run.bat" as Administrator. 
+
 # Steps to Run:
 1. Run PowerShell or cmd as administrator.
 
