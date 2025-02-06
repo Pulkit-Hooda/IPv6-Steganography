@@ -1,4 +1,4 @@
-import time
+from time import strftime,gmtime
 from scapy.all import sniff, IPv6
 from scapy.layers.inet6 import IPv6ExtHdrDestOpt, PadN, IPv6ExtHdrHopByHop
 import threading
@@ -9,12 +9,13 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 import hashlib
 import os
-# Global variables
+
+# global variables
 stop_event = threading.Event()
-buffer_ = []  # Buffer to store PadN data (in hex format)
-msg = []  # List to store decrypted messages
-alternate_packet_flag = False  # Flag to handle alternate packets
-interface = None  # Network interface
+buffer_ = []  
+msg = []  
+alternate_packet_flag = False 
+interface = None  
 target_ipv6 = ""
 logs=[]
 scroll=None
@@ -25,25 +26,22 @@ def inject_logs(scroll,log):
     for log in logs:
         scroll.insert(INSERT,log+'\n')
     scroll.configure(state ='disabled')
+    logs.clear()
+    # scroll.clipboard_clear()
 
 
 def decrypt_aes(ciphertext_hex, key):
     """Decrypt ciphertext using AES-256-CBC."""
-    # Convert ciphertext from hex to bytes
     ciphertext = bytes.fromhex(ciphertext_hex)
     
-    # Extract IV (first 16 bytes) and actual ciphertext
     iv = ciphertext[:16]
     encrypted_data = ciphertext[16:]
     
-    # Create a Cipher object using the key and IV
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     decryptor = cipher.decryptor()
     
-    # Decrypt the ciphertext
     padded_plaintext = decryptor.update(encrypted_data) + decryptor.finalize()
     
-    # Unpad the plaintext
     unpadder = padding.PKCS7(128).unpadder()
     plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
     
@@ -51,19 +49,15 @@ def decrypt_aes(ciphertext_hex, key):
 
 def verify_data(received_data_hex, expected_packets, short_hash):
     """Verify the integrity of the received data."""
-    # Compute the full hash of the received data
     received_data_bytes = bytes.fromhex(received_data_hex)
     full_hash = hashlib.sha256(received_data_bytes).digest()
-    computed_short_hash = full_hash[:8]  # Use only the first 8 bytes
-    
-    # Compare with the expected short hash
+    computed_short_hash = full_hash[:8]  
     if computed_short_hash != short_hash:
         print("Short hash verification failed: Data corrupted.")
         logs.append("Short hash verification failed: Data corrupted.")
         # inject_logs(scroll,logs)
         return False
     
-    # Compare the number of packets
     if len(buffer_) != expected_packets:
         print(f"Packet count mismatch: Expected {expected_packets}, Received {len(buffer_)}.")
         logs.append(f"Packet count mismatch: Expected {expected_packets}, Received {len(buffer_)}.")
@@ -72,8 +66,8 @@ def verify_data(received_data_hex, expected_packets, short_hash):
     
     print("Short hash verification succeeded: Data is intact.")
     print("Packet count verified.")
-    logs.append("Short hash verification succeeded: Data is intact.")
-    logs.append("Packet count verified.")
+    # logs.append("Short hash verification succeeded: Data is intact.")
+    # logs.append("Packet count verified.")
     # inject_logs(scroll,logs)
     return True
 
@@ -82,72 +76,76 @@ def packet_callback(packet):
     global alternate_packet_flag, buffer_, scroll, logs
     
     if stop_event.is_set():
-        return  # Stop processing if the stop event is set
+        return  
 
-    # Handle Destination Options Header
     if IPv6ExtHdrDestOpt in packet:
         dst_opt_hdr = packet[IPv6ExtHdrDestOpt]
         for opt in dst_opt_hdr.options:
-            if isinstance(opt, PadN):  # Check if option is PadN
+            if isinstance(opt, PadN):
                 padn_data = opt.optdata
                 
-                # Identify metadata packet by length (12 bytes)
+                # metadata
                 if len(padn_data) == 12:
-                    # Parse metadata packet
-                    total_packets_binary = padn_data[:4]  # First 32 bits (4 bytes)
+                    total_packets_binary = padn_data[:4]  # first 32 bits (4 bytes)
                     expected_packets = int.from_bytes(total_packets_binary, byteorder='big')
                     
-                    # Extract the short hash (remaining 8 bytes)
                     short_hash = padn_data[4:]
                     
                     print(f"Metadata Packet Received: Total Packets = {expected_packets}")
-                    logs.append(f"Metadata Packet Received: Total Packets = {expected_packets}")
+                    curr_time = strftime("[%H:%M:%S]",gmtime())
+                    logs.append(f"{curr_time} Metadata Packet Received: Total Packets = {expected_packets}")
                     # inject_logs(scroll,logs)
-                    # Verify and decrypt the accumulated data
+                    # verify and decrypt
                     if buffer_:
-                        combined_hex = "".join(buffer_)  # Combine all hex strings
+                        combined_hex = "".join(buffer_)  
                         
-                        # Verify data integrity
+                        # verify data integrity
                         if verify_data(combined_hex, expected_packets, short_hash):
                             try:
                                 decrypted_message = decrypt_aes(combined_hex, key)
                                 print(f"Decrypted Message: {decrypted_message}")
-                                logs.append(f"Decrypted Message: {decrypted_message}")
+                                curr_time = strftime("[%H:%M:%S]",gmtime())
+                                logs.append(f"{curr_time} Decrypted Message: {decrypted_message}\n")
                                 inject_logs(scroll,logs)
+                                logs.clear()
                                 msg.append(decrypted_message)
                             except Exception as e:
-                                print(f"Decryption failed: {e}")
+                                print(f"Decryption Failed: Invalid Key\n")
+                                curr_time = strftime("[%H:%M:%S]",gmtime())
+                                logs.append(f"{curr_time} Decryption failed: Invalid Key\n")
+                                inject_logs(scroll,logs)
+                                logs.clear()
                         
-                        # Reset buffer after decryption
+                        # reset
                         buffer_.clear()
                     
                     continue
                 
-                # Skip alternate packets if the interface is 'lo'
+                # skip alternate packets if interface is 'lo'
                 if interface == "lo":
                     if not alternate_packet_flag:
                         alternate_packet_flag = not alternate_packet_flag
                         continue
                 
-                # Collect PadN data
-                buffer_.append(padn_data.hex())  # Store data in hex format
+                # collect padn data
+                buffer_.append(padn_data.hex())
                 print(f"Collected PadN Data (Hex): {padn_data.hex()}")
                 
-                # Toggle the alternate packet flag
+                # toggle alternate packet flag
                 if interface == "lo":
                     alternate_packet_flag = not alternate_packet_flag
 
 def sniff_thread():
     global interface, stop_event
-    # Set up the BPF filter
+    # filter
     _filter = f"ip6 src host {target_ipv6}" if target_ipv6 else "ip6"
 
     print("Sniffing started in Background. Press Ctrl+C to stop.")
     try:
-        # Sniff only IPv6 packets
+        # sniff only ipv6 packets
         sniff(
-            iface=interface,  # Use the specified interface
-            filter=_filter,  # Capture all IPv6 packets
+            iface=interface,  
+            filter=_filter,  
             prn=packet_callback,
             store=False,
             timeout=1200,
@@ -166,7 +164,7 @@ def delete_firewall_rule():
     print(read_delete_process)
 
 def reciever_main(password,target_ip,scrll,interFace,myip):
-    global key, interface,target_ipv6, scroll, logs,name # AES decryption key and network interface
+    global key, interface,target_ipv6, scroll, logs,name 
 
     target_ipv6 = target_ip
     interface = interFace if interFace else "Wi-Fi"
@@ -187,10 +185,9 @@ def reciever_main(password,target_ip,scrll,interFace,myip):
     else:
         print("Rule Exists, continuing.")
 
-    # Derive a 32-byte key from the password using SHA-256
+    # derive 32-byte key
     key = hashlib.sha256(password.encode()).digest()
 
-    # Prompt the user for the network interface
     #interface = input("Enter the network interface (e.g., lo,eth0, wlan0, Wi-Fi)[default:Wi-Fi]: ")
 
     sniff_thread_instance = threading.Thread(target=sniff_thread)
