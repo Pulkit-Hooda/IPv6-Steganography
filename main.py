@@ -16,7 +16,7 @@ def destroy_receiver(t):
 def destroy_all(t):
     stop_event.set()
     t.destroy()
-    subprocess.run('taskkill /f /im python.exe')
+    #subprocess.run('taskkill /f /im python.exe')
 
 def send_func(ip,msg,key,scroll,myip,interface):
     val = msg.get()
@@ -24,39 +24,40 @@ def send_func(ip,msg,key,scroll,myip,interface):
     sender_main(ip,val,key,scroll,myip,interface)
 
 def send_window():
-    t=Toplevel()
-    t.resizable(0,0)
-    t.geometry("400x380")
+    t = Toplevel()
+    t.resizable(0, 0)
+    t.geometry("430x400")
     t.title("Send Your Message")
-    t.configure(bg="grey")
-    Label(t,text="Welcome to IPv6 Hidden message sender!",font="arial 15 bold",fg='white',bg='brown').place(x=0,y=0)
-    yc=90
-    Label(t,text="Enter Destination IPv6: ").place(x=10,y=50)
-    Label(t,text="Enter your message: ").place(x=10,y=80)
-    Label(t,text="Enter encryption key: ").place(x=10,y=110)
-    ip=StringVar()
-    msg=StringVar()
-    key=StringVar()
-    dip=Entry(t,textvariable=ip)
-    dmsg=Entry(t,textvariable=msg)
-    dkey=Entry(t,textvariable=key)
-    dip.place(x=150,y=50)
-    dmsg.place(x=150,y=80)
-    dkey.place(x=150,y=110)
-    text_area = scrolledtext.ScrolledText(t,  
-            wrap = WORD,  
-            width = 35,  
-            height = 6,  
-            font = ("Times New Roman", 15)
-            )
-    Label(t,text="Logs",font="arial 15 bold",fg='white',bg='black').place(x=10,y=175)
-    text_area.place(x=10,y=205)
-    
-    text_area.configure(state ='disabled')
-    Button(t,text="Send.",fg='lime',bg='black',command=lambda:send_func(dip.get(),dmsg,dkey.get(),text_area,myip,interface)).place(x=150,y=140)
-    Button(t,text="Exit.",fg='lime',bg='black',command=lambda:destroy(t)).place(x=200,y=140)
-    t.mainloop()
+    t.configure(bg="#2C3E50")
 
+    Label(t, text="IPv6 Hidden Message Sender", font=("Helvetica", 15, "bold"), fg='white', bg='#34495E', pady=10).pack(fill="x")
+    
+    Label(t, text="Enter Destination IPv6:", font=("Helvetica", 11), fg='white', bg='#2C3E50').place(x=20, y=60)
+    ip = StringVar()
+    dip = Entry(t, textvariable=ip, font=("Helvetica", 11), bg="#ECF0F1", bd=2, relief="solid")
+    dip.place(x=180, y=60, width=230)
+
+    Label(t, text="Enter your Message:", font=("Helvetica", 12), fg='white', bg='#2C3E50').place(x=20, y=100)
+    msg = StringVar()
+    dmsg = Entry(t, textvariable=msg, font=("Helvetica", 11), bg="#ECF0F1", bd=2, relief="solid")
+    dmsg.place(x=180, y=100, width=230)
+
+    Label(t, text="Enter Encryption Key:", font=("Helvetica", 11), fg='white', bg='#2C3E50').place(x=20, y=140)
+    key = StringVar()
+    dkey = Entry(t, textvariable=key, font=("Helvetica", 11), bg="#ECF0F1", bd=2, relief="solid")
+    dkey.place(x=180, y=140, width=230)
+
+    Label(t, text="Logs", font=("Helvetica", 14, "bold"), fg='white', bg='#2C3E50').place(x=20, y=180)
+    
+    text_area = scrolledtext.ScrolledText(t, wrap="word", width=47, height=6, font=("Times New Roman", 12), bg="#ECF0F1", bd=2)
+    text_area.place(x=20, y=220)
+    text_area.configure(state='disabled')
+
+    button_style = {'fg': 'white', 'bg': '#2980B9', 'font': ('Helvetica', 12, 'bold')}
+    Button(t, text="Send", command=lambda: send_func(dip.get(), dmsg.get(), dkey.get(), text_area, myip, interface), **button_style).place(x=130, y=360, width=80)
+    Button(t, text="Exit", command=lambda: destroy(t), **button_style).place(x=220, y=360, width=80)
+
+    t.mainloop()
 
 def rec_func(password,target_ip,text_area,interface,myip):
     reciever_main(password,target_ip,text_area,interface,myip)
@@ -68,34 +69,35 @@ def stop_sniff():
 
 
 def recieve_window():
-    t=Toplevel()
-    t.resizable(0,0)
-    t.geometry("400x380")
+    t = Toplevel()
+    t.resizable(0, 0)
+    t.geometry("430x400")
     t.title("Receive Your Message")
-    t.configure(bg="grey")
-    Label(t,text="Welcome to IPv6 Hidden message receiver!",font="arial 15 bold",fg='white',bg='brown').place(x=0,y=0)
-    yc=90
-    Label(t,text="Enter Source IPv6: ").place(x=10,y=50)
-    Label(t,text="Enter Decryption Key: ").place(x=10,y=80)
-    ip=StringVar()
-    key=StringVar()
-    dip=Entry(t,textvariable=ip)
-    dkey=Entry(t,textvariable=key)
-    dip.place(x=150,y=50)
-    dkey.place(x=150,y=80)
-    text_area = scrolledtext.ScrolledText(t,  
-            wrap = WORD,  
-            width = 35,  
-            height = 6,  
-            font = ("Times New Roman", 15)
-            )
-    Label(t,text="Recieved Packet Logs",font="arial 15 bold",fg='white',bg='grey').place(x=10,y=150)
-    text_area.place(x=10,y=190)
+    t.configure(bg="mediumseagreen")  
+
+    Label(t, text="IPv6 Hidden Message Receiver", font=("Helvetica", 15, "bold"), fg='white', bg='seagreen', pady=10).pack(fill="x")
     
-    text_area.configure(state ='disabled')
-    Button(t,text="Start.",fg='lime',bg='black',command=lambda:rec_func(key.get(),ip.get(),text_area,interface,myip)).place(x=90,y=120)
-    Button(t,text="Exit.",fg='lime',bg='black',command=lambda:destroy_receiver(t)).place(x=140,y=120)
-    Button(t,text="Stop Recieving.",fg='lime',bg='black',command=stop_sniff).place(x=180,y=120)
+    Label(t, text="Enter Source IPv6:", font=("Helvetica", 11), fg='white', bg='mediumseagreen').place(x=20, y=60)
+    ip = StringVar()
+    dip = Entry(t, textvariable=ip, font=("Helvetica", 11), bg="#ECF0F1", bd=0, relief="solid")
+    dip.place(x=180, y=60, width=230)
+
+    Label(t, text="Enter Decryption Key:", font=("Helvetica", 11), fg='white', bg='mediumseagreen').place(x=20, y=100)
+    key = StringVar()
+    dkey = Entry(t, textvariable=key, font=("Helvetica", 11), bg="#ECF0F1", bd=0, relief="solid")
+    dkey.place(x=180, y=100, width=230)
+
+    Label(t, text="Received Packet Logs", font=("Helvetica", 14, "bold"), fg='white', bg='mediumseagreen').place(x=20, y=140)
+    
+    text_area = scrolledtext.ScrolledText(t, wrap="word", width=47, height=8, font=("Times New Roman", 12), bg="#ECF0F1", bd=2)
+    text_area.place(x=20, y=180)
+    text_area.configure(state='disabled')
+
+    button_style = {'fg': 'white', 'bg': 'seagreen', 'font': ('Helvetica', 12, 'bold')}
+    Button(t, text="Start", command=lambda: rec_func(key.get(), ip.get(), text_area, interface, myip), **button_style).place(x=75, y=360, width=80)
+    Button(t, text="Exit", command=lambda: destroy_receiver(t), **button_style).place(x=165, y=360, width=80)
+    Button(t, text="Stop Receiving", command=stop_sniff, **button_style).place(x=255, y=360, width=125)
+
     t.mainloop()
 
 
@@ -115,16 +117,21 @@ def main():
     src_ip = dirty_src_ip[:-2]
     myip = src_ip
 
-    t=Tk()
+    t = Tk()
     t.title("Start-Up Window")
     t.geometry("370x270")
-    t.resizable(0,0)
-    Label(t,text="Welcome to IPv6 Steganography!",font="arial 16 bold",fg='white',bg='brown').place(x=10,y=0)
-    Label(t,text="Choose whether to send or receive!",font="arial 13 bold",fg='white',bg='green').place(x=35,y=40)
+    t.resizable(0, 0)
+    t.configure(bg="grey25")
 
-    Button(t,text="Send Message",border=5,fg="white",bg="purple",command=send_window).place(x=55,y=120)
-    Button(t,text="Recieve Message",border=5,fg="white",bg="purple",command=recieve_window).place(x=155,y=120)
-    Button(t,text="Exit",fg='white',bg='purple',command=lambda:destroy_all(t),border=5).place(x=265,y=120)
+    Label(t, text="Welcome to IPv6 Steganography!", font=("Helvetica", 16, "bold"), fg='white', bg='grey30', pady=10).pack(fill="x")
+
+    Label(t, text="Choose whether to send or receive!", font=("Helvetica", 13, "bold","underline"), fg='white', bg='grey25').place(x=35, y=60)
+
+    button_style = {'fg': 'white', 'bg': '#8E44AD', 'font': ('Helvetica', 12, 'bold')}
+    Button(t, text="Send Message", command=send_window, **button_style).place(x=120, y=100, width=120)
+    Button(t, text="Receive Message", command=recieve_window, **button_style).place(x=110, y=145, width=140)
+    Button(t, text="Exit", command=lambda: destroy_all(t), fg='white', bg='#E74C3C', font=('Helvetica', 12, 'bold')).place(x=140, y=190, width=80)
+
     t.mainloop()
 
 
