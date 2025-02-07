@@ -17,3 +17,6 @@ Just Run "run.bat" as Administrator.
 				where <interface> is the interface to send and sniff packets on.
 
 	Ex. if you are sniffing on Wi-Fi, then run it as: .\main.py Wi-Fi
+
+# Special Thanks
+Special thanks to Collaborators @DevanshArora312 and @ShreyPaul for making this project possible.
