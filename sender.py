@@ -1,9 +1,9 @@
 from scapy.all import *
 from scapy.layers.inet6 import IPv6ExtHdrDestOpt, PadN, IPv6ExtHdrHopByHop, IPv6, UDP
 from datetime import datetime
-from time import gmtime,strftime
+from time import localtime,strftime
 import argparse
-from tkinter import INSERT
+from tkinter import INSERT,END
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
@@ -20,6 +20,8 @@ def inject_logs(scroll,log):
     for log in logs:
         scroll.insert(INSERT,log+'\n')
     scroll.configure(state ='disabled')
+    scroll.yview(END)
+    scroll.yview_scroll(-2,"units")
     logs.clear()
 
 def ascii_to_binary(ascii_string):
@@ -79,7 +81,7 @@ def create_and_send_packet(secret_message, src_ip, dst_ip):
     mtu = 1500
     if packet_size > mtu:
         print(f"Warning: Packet size ({packet_size} bytes) exceeds MTU ({mtu} bytes).")
-        curr_time = strftime("[%H:%M:%S]",gmtime())
+        curr_time = strftime("[%H:%M:%S]",localtime())
         logs.append(f"{curr_time} Warning: Packet size ({packet_size} bytes) exceeds MTU ({mtu} bytes).")
         inject_logs(scroll,f"{curr_time} Warning: Packet size ({packet_size} bytes) exceeds MTU ({mtu} bytes).")
         return None
@@ -106,7 +108,7 @@ def create_and_send_metadata_packet(total_packets, short_hash, src_ip, dst_ip):
     # Send
     print("Sending metadata packet.")
     
-    curr_time = strftime("[%H:%M:%S]",gmtime())
+    curr_time = strftime("[%H:%M:%S]",localtime())
     logs.append(f"{curr_time} Sending metadata packet.")
     inject_logs(scroll,f"\n{curr_time} Sending metadata packet.")
     send(ipv6_packet, verbose=False, iface=interface)
@@ -163,7 +165,7 @@ def sender_main(ip,user_input,password,scrl,myIP,interFace):
             sent_packets.append(metadata_packet)
         
         print(f"Encrypted message '{user_input}' sent successfully.\n")
-        curr_time = strftime("[%H:%M:%S]",gmtime())
+        curr_time = strftime("[%H:%M:%S]",localtime())
         logs.append(f"{curr_time} Encrypted message '{user_input}' sent successfully.\n")
         inject_logs(scroll,f"{curr_time} Encrypted message '{user_input}' sent successfully.\n")
     except KeyboardInterrupt:

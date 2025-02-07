@@ -1,9 +1,9 @@
-from time import strftime,gmtime
+from time import strftime,localtime
 from scapy.all import sniff, IPv6
 from scapy.layers.inet6 import IPv6ExtHdrDestOpt, PadN, IPv6ExtHdrHopByHop
 import threading
 import argparse
-from tkinter import INSERT
+from tkinter import INSERT,END
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
@@ -26,6 +26,8 @@ def inject_logs(scroll,log):
     for log in logs:
         scroll.insert(INSERT,log+'\n')
     scroll.configure(state ='disabled')
+    scroll.yview(END)
+    scroll.yview_scroll(-4,"units")
     logs.clear()
     # scroll.clipboard_clear()
 
@@ -92,7 +94,7 @@ def packet_callback(packet):
                     short_hash = padn_data[4:]
                     
                     print(f"Metadata Packet Received: Total Packets = {expected_packets}")
-                    curr_time = strftime("[%H:%M:%S]",gmtime())
+                    curr_time = strftime("[%H:%M:%S]",localtime())
                     logs.append(f"{curr_time} Metadata Packet Received: Total Packets = {expected_packets}")
                     # inject_logs(scroll,logs)
                     # verify and decrypt
@@ -104,14 +106,14 @@ def packet_callback(packet):
                             try:
                                 decrypted_message = decrypt_aes(combined_hex, key)
                                 print(f"Decrypted Message: {decrypted_message}")
-                                curr_time = strftime("[%H:%M:%S]",gmtime())
+                                curr_time = strftime("[%H:%M:%S]",localtime())
                                 logs.append(f"{curr_time} Decrypted Message: {decrypted_message}\n")
                                 inject_logs(scroll,logs)
                                 logs.clear()
                                 msg.append(decrypted_message)
                             except Exception as e:
                                 print(f"Decryption Failed: Invalid Key\n")
-                                curr_time = strftime("[%H:%M:%S]",gmtime())
+                                curr_time = strftime("[%H:%M:%S]",localtime())
                                 logs.append(f"{curr_time} Decryption failed: Invalid Key\n")
                                 inject_logs(scroll,logs)
                                 logs.clear()
